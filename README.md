@@ -20,6 +20,8 @@ IEnumerable<Task<ItemDto>> tasks;
 ``` 
 In this case, the throttling pattern ensures that the synchronization object is not released to perform additional tasks when the number of concurrent tasks exceeds the 20 limit.
 Thus, we managed to receive about 200 requests in less than 3 seconds.
+![image](https://github.com/SerheiIC/SI.BambooCard/assets/159906799/194fb1db-061e-4098-beac-18d7037cb229)
+
 
 This approach is faster than the following possible methods:
 - simple asynchronous operations, simply using the async/await keywords;
