@@ -94,26 +94,19 @@ namespace SI.BambooCard.Application.Services
             return content;
         }
 
-        private Uri GetStoryDetailUri(int id)
-        {
-            return new Uri($"{_bestItemDetailsUrl}/{id}.json?print=pretty");
-        }
-        private static T? Deserialize<T>(string content)
-        {
-            return JsonConvert.DeserializeObject<T>(content, new JsonSerializerSettings()
-            {
-                Error = (sender, error) => error.ErrorContext.Handled = true
-            });
-        }
+        private Uri GetStoryDetailUri(int id) => new Uri($"{_bestItemDetailsUrl}/{id}.json?print=pretty");
 
-        private static HttpRequestMessage RequestMessage(Uri uri, HttpMethod method)
+        private static T? Deserialize<T>(string content) => JsonConvert.DeserializeObject<T>(content, new JsonSerializerSettings()
         {
-            return new HttpRequestMessage
-            {
-                Method = method,
-                RequestUri = uri,
-                Content = new StringContent("default.json", Encoding.UTF8, MediaTypeNames.Application.Json),
-            };
-        }
+            Error = (sender, error) => error.ErrorContext.Handled = true
+        });
+
+        private static HttpRequestMessage RequestMessage(Uri uri, HttpMethod method) => new HttpRequestMessage
+        {
+            Method = method,
+            RequestUri = uri,
+            Content = new StringContent("default.json", Encoding.UTF8, MediaTypeNames.Application.Json),
+        };
     }
 }
+
