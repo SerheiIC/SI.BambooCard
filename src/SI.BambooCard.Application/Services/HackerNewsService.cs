@@ -39,12 +39,12 @@ namespace SI.BambooCard.Application.Services
         public async Task<IEnumerable<ItemDto>> GetStories(int takeElements)
         {
             // 1). Get a set of stories collection 
-            var storiesIDsContent = await GetContent(RequestMessage(_bestStoriesUrl, HttpMethod.Get));
+            string storiesIDsContent = await GetContent(RequestMessage(_bestStoriesUrl, HttpMethod.Get));
             // 2). Deserialize item IDs
-            var bestStoriesIDs = Deserialize<IEnumerable<int>>(storiesIDsContent);
+            IEnumerable<int>? bestStoriesIDs = Deserialize<IEnumerable<int>>(storiesIDsContent);
             if (bestStoriesIDs == null || !bestStoriesIDs.Any())
             {
-                _logger.LogTrace("Failed to retrieve {bestStoriesIDs} story IDs.", bestStoriesIDs);
+                _logger.LogTrace("Unable to retrieve {bestStoriesIDs} story IDs.", bestStoriesIDs);
                 return Enumerable.Empty<ItemDto>();
             }
             // 3). Execute reading stories details in parallel in batches           
