@@ -15,6 +15,7 @@ namespace SI.BambooCard.Application.Services
         private readonly HttpClient _httpClient;
         private readonly Uri _bestStoriesUrl;
         private readonly Uri _bestItemDetailsUrl;
+        private readonly SemaphoreSlim _semaphoreSlim;
         private const string _hackerNewsApiName = "HackerNewsApi";
         private const string _version = "v0";
         private const int _maxConcurrency = 20;
@@ -26,6 +27,7 @@ namespace SI.BambooCard.Application.Services
             _httpClient.BaseAddress = new Uri($"{_httpClient.BaseAddress}/{_version}");
             _bestStoriesUrl = new Uri($"{_httpClient.BaseAddress}/beststories.json?print=pretty");
             _bestItemDetailsUrl = new Uri($"{_httpClient.BaseAddress}/item");
+            _semaphoreSlim = new SemaphoreSlim(_maxConcurrency);
             _logger = logger;
         }
 
@@ -42,7 +44,7 @@ namespace SI.BambooCard.Application.Services
             var bestStoriesIDs = Deserialize<IEnumerable<int>>(storiesIDsContent);
             if (bestStoriesIDs == null || !bestStoriesIDs.Any())
             {
-                _logger.LogError("Failed to retrieve {bestStoriesIDs} story IDs.", bestStoriesIDs);
+                _logger.LogTrace("Failed to retrieve {bestStoriesIDs} story IDs.", bestStoriesIDs);
                 return Enumerable.Empty<ItemDto>();
             }
             // 3). Execute reading stories details in parallel in batches           
@@ -52,14 +54,13 @@ namespace SI.BambooCard.Application.Services
         }
 
         private async Task<IReadOnlyCollection<IDto>> ExecuteBatchRun(IReadOnlyList<int> bestStoriesIds)
-        {
-            var semaphore = new SemaphoreSlim(_maxConcurrency);
-            var responses = new ConcurrentBag<Task<ItemDto>>(); 
-            var tasks = bestStoriesIds.Select(async id =>
+        { 
+            ConcurrentBag<Task<ItemDto>> responses = new ConcurrentBag<Task<ItemDto>>(); 
+            IEnumerable<Task<ItemDto>> tasks = bestStoriesIds.Select(async id =>
             {
                 // wait for each n tasks before running the next n tasks
                 // throttle the number of threads to n
-                await semaphore.WaitAsync();
+                await _semaphoreSlim.WaitAsync();
                 var task = GetStory<ItemDto>(id);
                 try
                 { 
@@ -68,7 +69,7 @@ namespace SI.BambooCard.Application.Services
                 }
                 finally
                 {
-                    semaphore.Release();
+                    _semaphoreSlim.Release();
                 }
             });
 
@@ -80,14 +81,14 @@ namespace SI.BambooCard.Application.Services
 
         private async Task<T> GetStory<T>(int id) where T : IDto, new()
         { 
-            var content = await GetContent(RequestMessage(GetStoryDetailUri(id), HttpMethod.Get)) ?? string.Empty;
+            string content = await GetContent(RequestMessage(GetStoryDetailUri(id), HttpMethod.Get)) ?? string.Empty;
             var result = Deserialize<T>(content);
             return result ?? new T();
         }
          
         private async Task<string> GetContent(HttpRequestMessage httpRequestMessage)
         {
-            var response = await _httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+            HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             response.Content?.Dispose();
@@ -109,4 +110,3 @@ namespace SI.BambooCard.Application.Services
         };
     }
 }
-

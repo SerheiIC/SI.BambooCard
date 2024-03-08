@@ -4,7 +4,7 @@ using SI.BambooCard.Application.Services;
 
 namespace SI.BambooCard.Web.Host.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class HackerNewsController : ControllerBase
     {

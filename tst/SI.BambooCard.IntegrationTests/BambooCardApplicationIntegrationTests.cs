@@ -15,7 +15,7 @@ namespace SI.BambooCard.IntegrationTests
         }
 
         [Theory]
-        [InlineData($"/api/hackernews/beststories/1")]
+        [InlineData($"/api/v1/hackernews/beststories/1")]
         public async Task Get_EndpointsReturnSuccessAndCorrectContentType(string url)
         {
             // Arrange
@@ -31,7 +31,7 @@ namespace SI.BambooCard.IntegrationTests
         }
 
         [Theory]
-        [InlineData($"/api/hackernews/beststories/")]
+        [InlineData($"/api/v1/hackernews/beststories/")]
         public async Task Get_WhenQueryArgIsNotPassed_ReturnsNotFound(string url)
         {
             // Arrange
@@ -52,7 +52,7 @@ namespace SI.BambooCard.IntegrationTests
         {
             // Arrange
             var client = _factory.CreateClient();
-            var url = $"/api/hackernews/beststories/{takeElements}";
+            var url = $"/api/v1/hackernews/beststories/{takeElements}";
 
             // Act
             var response = await client.GetAsync(url);
